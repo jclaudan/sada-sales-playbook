@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>SADA Ops Commander — Playbook Commercial (Preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1B365D;
+    --navy-dark: #112240;
+    --navy-light: #2a4a7f;
+    --orange: #E8611A;
+    --orange-light: #F5822E;
+    --orange-pale: #FFF3EC;
+    --white: #FFFFFF;
+    --off-white: #F8F9FC;
+    --gray-50: #F1F3F7;
+    --gray-100: #E2E6EE;
+    --gray-300: #9AAABF;
+    --gray-500: #5A6A82;
+    --gray-700: #334155;
+    --green: #16A34A;
+    --green-pale: #DCFCE7;
+    --amber: #D97706;
+    --amber-pale: #FEF3C7;
+    --red: #DC2626;
+    --red-pale: #FEE2E2;
+    --sidebar-w: 260px;
+    --sidebar-w-collapsed: 64px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--off-white);
+    color: var(--gray-700);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--navy-dark);
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    transition: width var(--transition);
+    overflow: hidden;
+  }
+  #sidebar.collapsed { width: var(--sidebar-w-collapsed); }
+
+  .sidebar-header {
+    padding: 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 72px;
+  }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--orange);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: white;
+    font-weight: 400;
+  }
+  .logo-text {
+    font-family: 'DM Serif Display', serif;
+    color: white;
+    font-size: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .logo-sub {
+    font-size: 10px;
+    color: var(--gray-300);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  #collapse-btn {
+    position: absolute;
+    top: 20px; right: 12px;
+    background: rgba(255,255,255,0.07);
+    border: none;
+    border-radius: 6px;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    color: var(--gray-300);
+    display: flex; align-items: center; justify-content: center;
+    transition: background var(--transition);
+  }
+  #collapse-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+
+  .sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+  .nav-section-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gray-300);
+    padding: 8px 8px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity var(--transition);
+  }
+  #sidebar.collapsed .nav-section-label { opacity: 0; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.6);
+    transition: all var(--transition);
+    white-space: nowrap;
+    margin-bottom: 2px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: white; }
+  .nav-item.active { background: var(--orange); color: white; }
+  .nav-icon {
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 15px;
+  }
+  .nav-label { overflow: hidden; }
+
+  .sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    white-space: nowrap;
+    overflow: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── MAIN CONTENT ── */
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    transition: margin-left var(--transition);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  body.sidebar-collapsed #main { margin-left: var(--sidebar-w-collapsed); }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: white;
+    border-bottom: 1px solid var(--gray-100);
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--navy);
+  }
+  .topbar-badge {
+    background: var(--orange-pale);
+    color: var(--orange);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── SECTIONS ── */
+  .section { display: none; padding: 36px 36px 60px; animation: fadeUp 0.35s ease; }
+  .section.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 30px;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .section-subtitle {
+    color: var(--gray-500);
+    font-size: 14px;
+    margin-bottom: 32px;
+    font-weight: 400;
+  }
+  h3 { font-size: 17px; font-weight: 600; color: var(--navy); margin-bottom: 12px; }
+  h4 { font-size: 14px; font-weight: 600; color: var(--navy); }
+
+  /* ── CARDS ── */
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--gray-100);
+    box-shadow: 0 1px 4px rgba(27,54,93,0.05);
+  }
+  .card-orange {
+    background: var(--orange);
+    color: white;
+    border-color: var(--orange);
+  }
+  .card-navy {
+    background: var(--navy);
+    color: white;
+    border-color: var(--navy);
+  }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  /* ── PILIERS ── */
+  .pilier-card {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 24px;
+    border: 1px solid var(--gray-100);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(27,54,93,0.06);
+  }
+  .pilier-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--orange);
+  }
+  .pilier-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 52px;
+    color: var(--gray-100);
+    position: absolute;
+    top: 12px; right: 20px;
+    line-height: 1;
+  }
+  .pilier-icon { font-size: 28px; margin-bottom: 12px; }
+  .pilier-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--navy); margin-bottom: 8px; }
+  .pilier-desc { font-size: 13px; color: var(--gray-500); line-height: 1.6; }
+
+  /* ── INDICATORS ── */
+  .indicator-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+  .indicator {
+    background: white;
+    border-radius: 10px;
+    padding: 16px 20px;
+    border: 1px solid var(--gray-100);
+    flex: 1; min-width: 160px;
+  }
+  .indicator-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--navy);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .indicator-label { font-size: 12px; color: var(--gray-500); }
+  .indicator-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 6px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .tag-green { background: var(--green-pale); color: var(--green); }
+  .tag-amber { background: var(--amber-pale); color: var(--amber); }
+  .tag-orange { background: var(--orange-pale); color: var(--orange); }
+
+  /* ── PERSONA CARDS ── */
+  .persona-card {
+    background: white;
+    border-radius: 14px;
+    border: 2px solid var(--gray-100);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition);
+    box-shadow: 0 2px 8px rgba(27,54,93,0.04);
+  }
+  .persona-card:hover { border-color: var(--orange); box-shadow: 0 8px 24px rgba(232,97,26,0.15); transform: translateY(-2px); }
+  .persona-card.open { border-color: var(--navy); }
+  .persona-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .persona-avatar {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .av-blue { background: #EEF2FA; }
+  .av-orange { background: var(--orange-pale); }
+  .av-green { background: var(--green-pale); }
+  .av-purple { background: #F3EEFF; }
+  .persona-name { font-weight: 600; font-size: 15px; color: var(--navy); }
+  .persona-role { font-size: 12px; color: var(--gray-500); }
+  .persona-chevron { margin-left: auto; color: var(--gray-300); font-size: 16px; transition: transform var(--transition); }
+  .persona-card.open .persona-chevron { transform: rotate(90deg); color: var(--navy); }
+  .persona-body {
+    display: none;
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--gray-50);
+  }
+  .persona-card.open .persona-body { display: block; }
+  .persona-section { margin-top: 14px; }
+  .persona-section-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-500); margin-bottom: 6px; font-weight: 600; }
+  .pain-tag {
+    display: inline-block;
+    background: var(--red-pale);
+    color: var(--red);
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin: 3px 3px 3px 0;
+  }
+  .value-tag {
+    display: inline-block;
+    background: var(--green-pale);
+    color: var(--green);
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin: 3px 3px 3px 0;
+  }
+  .message-box {
+    background: var(--navy);
+    color: white;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.5;
+    margin-top: 10px;
+  }
+
+  /* ── FILTER BAR ── */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .filter-btn {
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1.5px solid var(--gray-100);
+    background: white;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--gray-500);
+    transition: all var(--transition);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+  }
+  .filter-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .filter-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+  /* ── CHEAT SHEET TABLE ── */
+  .cheat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .cheat-table th {
+    background: var(--navy);
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .cheat-table th:first-child { border-radius: 8px 0 0 0; }
+  .cheat-table th:last-child { border-radius: 0 8px 0 0; }
+  .cheat-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-50); vertical-align: top; line-height: 1.5; }
+  .cheat-table tr:hover td { background: var(--gray-50); }
+  .cheat-table tr[data-hide] { display: none; }
+
+  /* ── PRICING ── */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+  .price-card {
+    background: white;
+    border: 2px solid var(--gray-100);
+    border-radius: 16px;
+    padding: 28px 24px;
+    position: relative;
+    transition: all var(--transition);
+  }
+  .price-card:hover { border-color: var(--orange); box-shadow: 0 8px 32px rgba(232,97,26,0.1); }
+  .price-card.featured {
+    border-color: var(--navy);
+    background: var(--navy);
+    color: white;
+  }
+  .price-badge {
+    position: absolute;
+    top: -12px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--orange);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .price-tier { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .price-tier-navy { color: var(--gray-500); }
+  .price-tier-white { color: rgba(255,255,255,0.6); }
+  .price-amount { font-family: 'DM Serif Display', serif; font-size: 38px; color: var(--navy); line-height: 1; }
+  .price-amount-white { color: white; }
+  .price-period { font-size: 12px; color: var(--gray-500); margin-bottom: 20px; }
+  .price-period-white { color: rgba(255,255,255,0.5); }
+  .price-annual { font-size: 12px; color: var(--green); font-weight: 600; margin-bottom: 16px; }
+  .price-annual-white { color: #6EE7B7; }
+  .price-feature { font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--gray-50); display: flex; align-items: flex-start; gap: 8px; }
+  .price-feature-white { border-bottom-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); }
+  .feat-check { color: var(--green); flex-shrink: 0; margin-top: 1px; }
+  .feat-check-white { color: #6EE7B7; }
+
+  /* ── ROI SIMULATOR ── */
+  .roi-box {
+    background: white;
+    border-radius: 14px;
+    padding: 28px;
+    border: 1px solid var(--gray-100);
+  }
+  .roi-result {
+    background: var(--navy);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .roi-val { font-family: 'DM Serif Display', serif; font-size: 36px; color: var(--orange); }
+  .roi-label { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--navy); margin-bottom: 6px; }
+  input[type=range] { width: 100%; accent-color: var(--orange); }
+  .range-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 500; color: var(--orange); }
+  select, input[type=text], input[type=number] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--gray-100);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--gray-700);
+    background: white;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  select:focus, input:focus { border-color: var(--orange); }
+
+  /* ── BOOSTER ACCORDION ── */
+  .booster-item {
+    border: 1.5px solid var(--gray-100);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .booster-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    cursor: pointer;
+    background: white;
+    transition: background var(--transition);
+  }
+  .booster-trigger:hover { background: var(--gray-50); }
+  .booster-trigger-label { font-size: 14px; color: var(--gray-700); }
+  .booster-trigger-label strong { color: var(--red); }
+  .booster-content {
+    display: none;
+    padding: 14px 18px;
+    background: var(--orange-pale);
+    border-top: 1px solid var(--gray-100);
+    font-size: 13.5px;
+    color: var(--navy);
+    line-height: 1.6;
+  }
+  .booster-item.open .booster-content { display: block; }
+  .booster-item.open .booster-trigger { background: var(--orange-pale); }
+  .booster-arrow { color: var(--gray-300); transition: transform var(--transition); font-size: 14px; }
+  .booster-item.open .booster-arrow { transform: rotate(90deg); color: var(--orange); }
+
+  /* ── PIPELINE ── */
+  .pipeline-flow {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .pipeline-step {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    position: relative;
+  }
+  .pipeline-step::after {
+    content: '→';
+    position: absolute;
+    right: -8px;
+    top: 22px;
+    font-size: 18px;
+    color: var(--gray-300);
+  }
+  .pipeline-step:last-child::after { display: none; }
+  .step-circle {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    margin: 0 auto 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    transition: background var(--transition);
+    cursor: pointer;
+  }
+  .pipeline-step:hover .step-circle { background: var(--orange); }
+  .step-label { font-size: 11px; font-weight: 600; color: var(--navy); text-transform: uppercase; letter-spacing: 0.06em; }
+  .step-sub { font-size: 10px; color: var(--gray-500); margin-top: 2px; }
+
+  /* ── SCRIPT BUTTONS ── */
+  .script-box {
+    background: var(--navy-dark);
+    border-radius: 12px;
+    padding: 20px 22px;
+    position: relative;
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.7;
+  }
+  .script-label {
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--orange);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 14px; right: 14px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background var(--transition);
+  }
+  .copy-btn:hover { background: var(--orange); color: white; }
+  .copy-btn.copied { background: var(--green); color: white; }
+
+  /* ── OBJECTIONS ── */
+  .objection-item {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    border: 1.5px solid var(--gray-100);
+  }
+  .objection-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    cursor: pointer;
+    background: white;
+    transition: background var(--transition);
+  }
+  .objection-trigger:hover { background: var(--gray-50); }
+  .obj-icon {
+    width: 34px; height: 34px;
+    background: var(--red-pale);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .objection-text { font-size: 14px; font-weight: 600; color: var(--navy); }
+  .objection-content {
+    display: none;
+    padding: 16px 20px;
+    background: #F0F7FF;
+    border-top: 1px solid var(--gray-100);
+  }
+  .objection-item.open .objection-content { display: block; }
+  .response-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--navy); font-weight: 700; margin-bottom: 6px; }
+  .response-text { font-size: 13.5px; color: var(--gray-700); line-height: 1.6; font-style: italic; }
+
+  /* ── RITUALS ── */
+  .ritual-timeline { position: relative; padding-left: 32px; }
+  .ritual-timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--gray-100);
+  }
+  .ritual-item { position: relative; margin-bottom: 28px; }
+  .ritual-dot {
+    position: absolute;
+    left: -26px; top: 0;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--orange);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    color: white;
+    font-weight: 700;
+    z-index: 1;
+  }
+  .ritual-time {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .ritual-name { font-size: 16px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .ritual-items { font-size: 13px; color: var(--gray-500); line-height: 1.7; }
+
+  /* ── KPI TABLE ── */
+  .kpi-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .kpi-table th {
+    background: var(--navy);
+    color: white;
+    padding: 11px 16px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .kpi-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-50); }
+  .kpi-table tr:hover td { background: var(--gray-50); }
+  .kpi-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.06em;
+  }
+  .kpi-red { background: var(--red-pale); color: var(--red); }
+  .kpi-amber { background: var(--amber-pale); color: var(--amber); }
+  .kpi-green { background: var(--green-pale); color: var(--green); }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gray-50);
+    cursor: pointer;
+    transition: opacity var(--transition);
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .check-box {
+    width: 22px; height: 22px;
+    border: 2px solid var(--gray-300);
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all var(--transition);
+    margin-top: 1px;
+  }
+  .checklist li.checked .check-box { background: var(--green); border-color: var(--green); }
+  .checklist li.checked .check-text { text-decoration: line-through; color: var(--gray-300); }
+  .check-text { font-size: 13.5px; color: var(--gray-700); line-height: 1.5; }
+
+  /* ── COMPARATOR ── */
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .compare-table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .compare-table th:first-child { color: var(--gray-500); font-weight: 500; }
+  .compare-table th.col-sada { background: var(--navy); color: white; border-radius: 8px 8px 0 0; }
+  .compare-table th.col-other { background: var(--gray-50); color: var(--gray-500); }
+  .compare-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-50); }
+  .compare-table td.col-sada { background: #EEF3FB; font-weight: 500; color: var(--navy); }
+  .compare-table td.col-other { color: var(--gray-500); }
+  .compare-table tr:hover td { filter: brightness(0.97); }
+  .tick-yes { color: var(--green); font-weight: 700; }
+  .tick-no { color: var(--red); }
+  .tick-partial { color: var(--amber); }
+
+  /* ── FRAMEWORK ── */
+  .framework-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .framework-card {
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid;
+  }
+  .fw-leads { border-color: var(--red); background: var(--red-pale); }
+  .fw-demos { border-color: var(--amber); background: var(--amber-pale); }
+  .fw-sign { border-color: var(--green); background: var(--green-pale); }
+  .fw-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .fw-desc { font-size: 12px; line-height: 1.6; }
+
+  /* ── UTILITY ── */
+  .mb-4 { margin-bottom: 4px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-24 { margin-bottom: 24px; }
+  .mb-32 { margin-bottom: 32px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-24 { margin-top: 24px; }
+  .flex { display: flex; }
+  .items-center { align-items: center; }
+  .gap-8 { gap: 8px; }
+  .gap-16 { gap: 16px; }
+  .text-sm { font-size: 13px; }
+  .text-xs { font-size: 11px; }
+  .text-orange { color: var(--orange); }
+  .text-navy { color: var(--navy); }
+  .text-gray { color: var(--gray-500); }
+  .font-bold { font-weight: 700; }
+  .font-serif { font-family: 'DM Serif Display', serif; }
+  .divider { height: 1px; background: var(--gray-100); margin: 24px 0; }
+  .highlight-box {
+    background: var(--orange-pale);
+    border-left: 4px solid var(--orange);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--navy);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .info-box {
+    background: #EEF3FB;
+    border-left: 4px solid var(--navy);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--navy);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    #sidebar { width: var(--sidebar-w-collapsed); }
+    #main { margin-left: var(--sidebar-w-collapsed); }
+    .logo-text, .nav-label, .nav-section-label, .sidebar-footer { display: none; }
+    .section { padding: 24px 20px 60px; }
+    .grid-2, .grid-3, .grid-4, .pricing-grid, .framework-grid { grid-template-columns: 1fr; }
+    .topbar { padding: 0 20px; }
+    body.sidebar-collapsed #main { margin-left: var(--sidebar-w-collapsed); }
+  }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--green);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(22,163,74,0.35);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 9999;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-mark">S</div>
+    <div>
+      <div class="logo-text">SADA</div>
+      <div class="logo-sub">Ops Commander</div>
+    </div>
+    <button id="collapse-btn" onclick="toggleSidebar()" title="Réduire">←</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Vue d'ensemble</div>
+    <button class="nav-item active" onclick="showSection('dashboard')">
+      <span class="nav-icon">📊</span><span class="nav-label">Dashboard Vision</span>
+    </button>
+
+    <div class="nav-section-label" style="margin-top:12px">Terrain</div>
+    <button class="nav-item" onclick="showSection('personas')">
+      <span class="nav-icon">👥</span><span class="nav-label">Hub Personas</span>
+    </button>
+    <button class="nav-item" onclick="showSection('pricing')">
+      <span class="nav-icon">💰</span><span class="nav-label">Tarifs & ROI</span>
+    </button>
+    <button class="nav-item" onclick="showSection('pipeline')">
+      <span class="nav-icon">🎯</span><span class="nav-label">Pipeline & Scripts</span>
+    </button>
+
+    <div class="nav-section-label" style="margin-top:12px">Pilotage</div>
+    <button class="nav-item" onclick="showSection('ops')">
+      <span class="nav-icon">⚙️</span><span class="nav-label">Engine Ops & KPIs</span>
+    </button>
+    <button class="nav-item" onclick="showSection('compare')">
+      <span class="nav-icon">⚖️</span><span class="nav-label">Comparateur</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    Document confidentiel<br>
+    Service Digital — Cabinet SYNESS<br>
+    Mai 2026
+  </div>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard Vision</div>
+    <span class="topbar-badge">🌍 Playbook SADA v2026</span>
+  </div>
+
+  <!-- ──────────── 1. DASHBOARD ──────────── -->
+  <section id="dashboard" class="section active">
+    <div class="section-title">SADA en 3 Piliers</div>
+    <div class="section-subtitle">L'infrastructure de confiance de l'économie africaine moderne</div>
+
+    <div class="indicator-row">
+      <div class="indicator">
+        <div class="indicator-val">90%+</div>
+        <div class="indicator-label">PME dans le tissu économique africain</div>
+        <span class="indicator-tag tag-orange">Marché Cible</span>
+      </div>
+      <div class="indicator">
+        <div class="indicator-val">1.3B</div>
+        <div class="indicator-label">Consommateurs ZLECAf</div>
+        <span class="indicator-tag tag-green">Opportunité</span>
+      </div>
+      <div class="indicator">
+        <div class="indicator-val">15j</div>
+        <div class="indicator-label">Essai gratuit sans engagement</div>
+        <span class="indicator-tag tag-amber">Conversion</span>
+      </div>
+      <div class="indicator">
+        <div class="indicator-val">100%</div>
+        <div class="indicator-label">Conformité SYSCOHADA / OHADA</div>
+        <span class="indicator-tag tag-green">Natif</span>
+      </div>
+    </div>
+
+    <div class="grid-3 mb-32">
+      <div class="pilier-card">
+        <span class="pilier-num">1</span>
+        <div class="pilier-icon">🏛️</div>
+        <div class="pilier-title">Infrastructure de Confiance</div>
+        <div class="pilier-desc">ERP + IA + Compte Pro intégré. Chaque transaction financière alimente automatiquement le pilotage et la comptabilité sans intervention manuelle superflue.</div>
+      </div>
+      <div class="pilier-card">
+        <span class="pilier-num">2</span>
+        <div class="pilier-icon">🚀</div>
+        <div class="pilier-title">Professionnalisation</div>
+        <div class="pilier-desc">Transformer la contrainte administrative (factures, reçus) en un actif stratégique. Industrialiser la fiabilité financière des PME et des cabinets comptables.</div>
+      </div>
+      <div class="pilier-card">
+        <span class="pilier-num">3</span>
+        <div class="pilier-icon">✅</div>
+        <div class="pilier-title">Conformité Native</div>
+        <div class="pilier-desc">SADA garantit une conformité totale aux normes SYSCOHADA/OHADA. La rigueur comptable devient un passeport pour exporter et collaborer au-delà des frontières.</div>
+      </div>
+    </div>
+
+    <h3>Indicateurs Contexte de Déploiement</h3>
+    <div class="divider" style="margin-top:6px"></div>
+    <div class="grid-2 mb-32">
+      <div class="card">
+        <div style="font-size:24px;margin-bottom:8px">📱</div>
+        <h4 style="margin-bottom:6px">Ubiquité Mobile Money</h4>
+        <div class="text-sm text-gray" style="line-height:1.6">L'intégration native des flux Orange Money & Wave est la condition sine qua non de l'adoption pour les PME locales africaines.</div>
+      </div>
+      <div class="card">
+        <div style="font-size:24px;margin-bottom:8px">🌐</div>
+        <h4 style="margin-bottom:6px">Exigence ZLECAf</h4>
+        <div class="text-sm text-gray" style="line-height:1.6">Dans un marché de 1,3 milliard de consommateurs, la rigueur comptable est le passeport indispensable pour exporter et collaborer au-delà des frontières.</div>
+      </div>
+      <div class="card">
+        <div style="font-size:24px;margin-bottom:8px">⚖️</div>
+        <h4 style="margin-bottom:6px">Conformité SYSCOHADA</h4>
+        <div class="text-sm text-gray" style="line-height:1.6">SADA transforme la réglementation en avantage compétitif. La conformité n'est plus un coût, c'est un atout différenciant.</div>
+      </div>
+      <div class="card">
+        <div style="font-size:24px;margin-bottom:8px">🤝</div>
+        <h4 style="margin-bottom:6px">Stratégie Communities-First</h4>
+        <div class="text-sm text-gray" style="line-height:1.6">Déploiement via coopératives, cabinets comptables et groupements patronaux. La légitimité des pairs réduit les barrières à l'adoption technologique.</div>
+      </div>
+    </div>
+
+    <h3>La Mission SADA</h3>
+    <div class="card-navy card mt-16" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="font-size:40px">🧠</div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-family:'DM Serif Display',serif;font-size:22px;color:white;margin-bottom:8px">"Le Système Nerveux de l'Économie Africaine"</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.7">Nous ne vendons pas qu'un logiciel. Nous déployons l'infrastructure de confiance de l'entreprise africaine moderne. Chaque PME doit piloter son activité avec la même précision qu'une multinationale.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────── 2. PERSONAS ──────────── -->
+  <section id="personas" class="section">
+    <div class="section-title">Hub Personas & Argumentaires</div>
+    <div class="section-subtitle">Cliquer sur une carte pour développer l'argumentaire complet</div>
+
+    <div class="grid-2 mb-32">
+      <!-- Coopérative -->
+      <div class="persona-card" onclick="togglePersona(this)">
+        <div class="persona-header">
+          <div class="persona-avatar av-green">🤝</div>
+          <div>
+            <div class="persona-name">Partenaire Coopérative</div>
+            <div class="persona-role">Association / Groupement économique / Fédération</div>
+          </div>
+          <div class="persona-chevron">▶</div>
+        </div>
+        <div class="persona-body">
+          <div class="persona-section">
+            <div class="persona-section-label">⚠️ Douleurs</div>
+            <span class="pain-tag">Faible visibilité membres</span>
+            <span class="pain-tag">Gestion admin fragmentée</span>
+            <span class="pain-tag">Cotisations non digitalisées</span>
+            <span class="pain-tag">Données peu fiables</span>
+          </div>
+          <div class="persona-section">
+            <div class="persona-section-label">✅ Valeur SADA</div>
+            <span class="value-tag">Plateforme unifiée</span>
+            <span class="value-tag">Compte pro intégré</span>
+            <span class="value-tag">Suivi membres temps réel</span>
+            <span class="value-tag">Accès financement</span>
+            <span class="value-tag">Nouveau modèle de revenus</span>
+          </div>
+          <div class="message-box">"SADA transforme votre communauté en un écosystème structuré, traçable et finançable."</div>
+          <div class="persona-section">
+            <div class="persona-section-label">📊 Potentiel</div>
+            <div class="text-sm text-gray">1 coopérative régionale = <strong>5 000 à 20 000 membres actifs</strong> sur 12 mois</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cabinet -->
+      <div class="persona-card" onclick="togglePersona(this)">
+        <div class="persona-header">
+          <div class="persona-avatar av-blue">📋</div>
+          <div>
+            <div class="persona-name">Cabinet Comptable</div>
+            <div class="persona-role">Expert-comptable / Cabinet digital / Fiduciaire</div>
+          </div>
+          <div class="persona-chevron">▶</div>
+        </div>
+        <div class="persona-body">
+          <div class="persona-section">
+            <div class="persona-section-label">⚠️ Douleurs</div>
+            <span class="pain-tag">Ressaisies manuelles</span>
+            <span class="pain-tag">Pièces manquantes</span>
+            <span class="pain-tag">Retards de transmission</span>
+            <span class="pain-tag">Outils fragmentés</span>
+            <span class="pain-tag">Pression délais</span>
+          </div>
+          <div class="persona-section">
+            <div class="persona-section-label">✅ Valeur SADA</div>
+            <span class="value-tag">Environnement collaboratif unifié</span>
+            <span class="value-tag">Données centralisées</span>
+            <span class="value-tag">Conformité simplifiée</span>
+            <span class="value-tag">Workflows automatisés</span>
+            <span class="value-tag">MRR récurrent</span>
+          </div>
+          <div class="message-box">"SADA connecte le cabinet et ses clients dans un environnement unifié, automatisé et temps réel."</div>
+          <div class="persona-section">
+            <div class="persona-section-label">📊 Potentiel</div>
+            <div class="text-sm text-gray">1 cabinet partenaire = <strong>10 à 50 PME actives</strong> sous SADA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dirigeant PME -->
+      <div class="persona-card" onclick="togglePersona(this)">
+        <div class="persona-header">
+          <div class="persona-avatar av-orange">💼</div>
+          <div>
+            <div class="persona-name">Dirigeant PME / TPE</div>
+            <div class="persona-role">Entrepreneur / Commerçant / Patron d'activité</div>
+          </div>
+          <div class="persona-chevron">▶</div>
+        </div>
+        <div class="persona-body">
+          <div class="persona-section">
+            <div class="persona-section-label">⚠️ Douleurs</div>
+            <span class="pain-tag">Excel / Cahiers / WhatsApp</span>
+            <span class="pain-tag">Pas de visibilité trésorerie</span>
+            <span class="pain-tag">Retards déclarations</span>
+            <span class="pain-tag">Tensions cash imprévues</span>
+          </div>
+          <div class="persona-section">
+            <div class="persona-section-label">✅ Valeur SADA</div>
+            <span class="value-tag">Compte pro intégré</span>
+            <span class="value-tag">Données temps réel</span>
+            <span class="value-tag">Automatisation comptable</span>
+            <span class="value-tag">Agent IA alerte & recommande</span>
+          </div>
+          <div class="message-box">"SADA simplifie la gestion de votre entreprise et vous aide à décider avec plus de clarté."</div>
+        </div>
+      </div>
+
+      <!-- DAF / Contrôleur -->
+      <div class="persona-card" onclick="togglePersona(this)">
+        <div class="persona-header">
+          <div class="persona-avatar av-purple">📈</div>
+          <div>
+            <div class="persona-name">Comptable / DAF / Contrôleur</div>
+            <div class="persona-role">Pilotage financier / Reporting / Budget</div>
+          </div>
+          <div class="persona-chevron">▶</div>
+        </div>
+        <div class="persona-body">
+          <div class="persona-section">
+            <div class="persona-section-label">⚠️ Douleurs</div>
+            <span class="pain-tag">Consolidation manuelle</span>
+            <span class="pain-tag">Reporting lent</span>
+            <span class="pain-tag">Erreurs d'archivage</span>
+            <span class="pain-tag">Outils non connectés</span>
+          </div>
+          <div class="persona-section">
+            <div class="persona-section-label">✅ Valeur SADA</div>
+            <span class="value-tag">Reporting instantané</span>
+            <span class="value-tag">Gestion analytique avancée</span>
+            <span class="value-tag">Prévisions IA</span>
+            <span class="value-tag">Tableaux de bord dynamiques</span>
+          </div>
+          <div class="message-box">"SADA automatise le pilotage financier et transforme vos données en décisions stratégiques."</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cheat Sheet -->
+    <h3>Cheat Sheet — Problème × Solution × Message-Clé</h3>
+    <div class="filter-bar mt-16 mb-16">
+      <button class="filter-btn active" onclick="filterCheat('all', this)">Tous</button>
+      <button class="filter-btn" onclick="filterCheat('cabinet', this)">Cabinet</button>
+      <button class="filter-btn" onclick="filterCheat('coop', this)">Coopérative</button>
+      <button class="filter-btn" onclick="filterCheat('pme', this)">Dirigeant PME</button>
+      <button class="filter-btn" onclick="filterCheat('daf', this)">DAF / Contrôleur</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="cheat-table">
+        <thead>
+          <tr><th>Persona</th><th>Problème</th><th>Solution SADA</th><th>Message-Clé</th></tr>
+        </thead>
+        <tbody id="cheat-body">
+          <tr data-cat="cabinet"><td><strong>Cabinet</strong></td><td>Ressaisies manuelles, retards, outils fragmentés</td><td>Environnement collaboratif unifié, workflows automatisés</td><td class="text-orange font-bold">Données fiables, cabinet en temps réel</td></tr>
+          <tr data-cat="cabinet"><td><strong>Cabinet</strong></td><td>Pièces justificatives manquantes, pression délais</td><td>Centralisation automatique des justificatifs et déclarations</td><td class="text-orange font-bold">Libérer du temps pour le conseil à valeur ajoutée</td></tr>
+          <tr data-cat="coop"><td><strong>Coopérative</strong></td><td>Faible visibilité sur l'activité réelle des membres</td><td>Dashboard de suivi des membres en temps réel</td><td class="text-orange font-bold">Transformer votre communauté en écosystème finançable</td></tr>
+          <tr data-cat="coop"><td><strong>Coopérative</strong></td><td>Difficultés de collecte des cotisations</td><td>Compte pro intégré, paiements Mobile Money automatisés</td><td class="text-orange font-bold">Nouveau modèle de revenus basé sur l'usage des membres</td></tr>
+          <tr data-cat="pme"><td><strong>Dirigeant PME</strong></td><td>Outils dispersés, pas de visibilité trésorerie</td><td>Plateforme centralisée, compte pro, données temps réel</td><td class="text-orange font-bold">Décider avec clarté, piloter comme une multinationale</td></tr>
+          <tr data-cat="pme"><td><strong>Dirigeant PME</strong></td><td>Retards fiscaux, suivi approximatif des dépenses</td><td>Gestion fiscale automatisée, agent IA alerte & recommande</td><td class="text-orange font-bold">Zéro surprise fiscale, zéro tension de trésorerie</td></tr>
+          <tr data-cat="daf"><td><strong>DAF / Contrôleur</strong></td><td>Consolidation manuelle, reporting lent et peu fiable</td><td>Reporting instantané, gestion analytique avancée</td><td class="text-orange font-bold">Des décisions stratégiques en quelques clics</td></tr>
+          <tr data-cat="daf"><td><strong>DAF / Contrôleur</strong></td><td>Multiplication des fichiers, erreurs d'archivage</td><td>Centralisation & prévisions IA, tableaux de bord dynamiques</td><td class="text-orange font-bold">Une seule source de vérité pour toute l'organisation</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ──────────── 3. PRICING ──────────── -->
+  <section id="pricing" class="section">
+    <div class="section-title">Centre de Calcul & Tarifs</div>
+    <div class="section-subtitle">Grille tarifaire interactive + Simulateur de ROI + Boosters de closing</div>
+    <div class="highlight-box mb-24">🎁 <strong>15 jours d'essai gratuit</strong> sans engagement sur tous les plans. Option annuelle : économie de 2 mois de loyer SADA.</div>
+    <div class="pricing-grid mb-32">
+      <div class="price-card"><div class="price-tier price-tier-navy">Basique</div><div class="price-amount">5 000</div><div class="price-period">FCFA / utilisateur / mois</div><div class="price-annual">Option annuelle : 48 000 FCFA (–20%)</div><div class="price-feature"><span class="feat-check">✓</span> Caisse (Point de Vente)</div><div class="price-feature"><span class="feat-check">✓</span> Facturation</div><div class="price-feature"><span class="feat-check">✓</span> Comptabilité de base</div><div class="price-feature" style="color:var(--gray-300)"><span>–</span>&nbsp; CRM</div><div class="price-feature" style="color:var(--gray-300)"><span>–</span>&nbsp; IA Décisionnelle</div><div style="margin-top:20px"><div style="background:var(--gray-50);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--gray-500)">💡 ~160 FCFA/jour — moins qu'un transport taxi</div></div></div>
+      <div class="price-card featured"><div class="price-badge">⭐ Recommandé</div><div class="price-tier price-tier-white">Essentiel</div><div class="price-amount price-amount-white">7 500</div><div class="price-period price-period-white">FCFA / utilisateur / mois</div><div class="price-annual price-annual-white">Option annuelle : 72 000 FCFA (–20%)</div><div class="price-feature price-feature-white"><span class="feat-check feat-check-white">✓</span> Tout le plan Basique</div><div class="price-feature price-feature-white"><span class="feat-check feat-check-white">✓</span> Tableau de bord personnalisé</div><div class="price-feature price-feature-white"><span class="feat-check feat-check-white">✓</span> CRM</div><div class="price-feature price-feature-white"><span class="feat-check feat-check-white">✓</span> Banque & Paiements (Mobile Money)</div><div class="price-feature price-feature-white"><span class="feat-check feat-check-white">✓</span> Gestion Fiscale automatisée</div><div style="margin-top:20px"><div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:10px 14px;font-size:12px;color:rgba(255,255,255,0.7)">💡 ~250 FCFA/jour — 1 café + croissant</div></div></div>
+      <div class="price-card"><div class="price-tier price-tier-navy">Premium</div><div class="price-amount">9 000</div><div class="price-period">FCFA / utilisateur / mois</div><div class="price-annual">Option annuelle : 86 400 FCFA (–20%)</div><div class="price-feature"><span class="feat-check">✓</span> Tout le plan Essentiel</div><div class="price-feature"><span class="feat-check">✓</span> Gestion des Budgets</div><div class="price-feature"><span class="feat-check">✓</span> Gestion de la Paie</div><div class="price-feature"><span class="feat-check">✓</span> États Financiers complets</div><div class="price-feature"><span class="feat-check">✓</span> <strong>IA Décisionnelle</strong></div><div style="margin-top:20px"><div style="background:var(--gray-50);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--gray-500)">💡 Module Cabinet offert si +10 clients onboardés</div></div></div>
+    </div>
+
+    <h3>Simulateur de ROI</h3>
+    <div class="roi-box mt-16 mb-32">
+      <div class="grid-2" style="gap:24px;align-items:start">
+        <div>
+          <div class="mb-16"><label>Nombre d'utilisateurs : <span class="range-val" id="roi-users-val">3</span></label><input type="range" min="1" max="50" value="3" id="roi-users" oninput="calcROI()"></div>
+          <div class="mb-16"><label>Plan sélectionné</label><select id="roi-plan" onchange="calcROI()"><option value="5000">Basique — 5 000 FCFA/user/mois</option><option value="7500" selected>Essentiel — 7 500 FCFA/user/mois</option><option value="9000">Premium — 9 000 FCFA/user/mois</option></select></div>
+          <div class="mb-16"><label>Créances récupérées estimées / mois (FCFA) : <span class="range-val" id="roi-creances-val">20 000</span></label><input type="range" min="0" max="500000" step="5000" value="20000" id="roi-creances" oninput="calcROI()"></div>
+          <div><label>Heures gagnées / semaine (valeur horaire 2 000 FCFA) : <span class="range-val" id="roi-hours-val">5</span>h</label><input type="range" min="0" max="40" value="5" id="roi-hours" oninput="calcROI()"></div>
+        </div>
+        <div>
+          <div class="roi-result"><div style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">Coût mensuel</div><div class="roi-val" id="roi-cost">22 500</div><div class="roi-label">FCFA / mois</div></div>
+          <div class="roi-result" style="margin-top:12px"><div style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">Valeur Créée / mois</div><div class="roi-val" id="roi-value">60 000</div><div class="roi-label">FCFA (créances + temps récupéré)</div></div>
+          <div class="roi-result" style="margin-top:12px;background:var(--orange)"><div style="font-size:12px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">ROI Net</div><div class="roi-val" style="color:white;font-size:42px" id="roi-net">+37 500</div><div class="roi-label">FCFA net / mois</div></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="info-box" style="margin-bottom:0"><strong>💡 Script "Prix d'un café" :</strong> Pour 5 000 FCFA par mois, cela revient à environ <strong>160 FCFA par jour</strong>. C'est moins cher qu'un transport en taxi pour aller chercher une facture manquante. Si SADA vous permet de récupérer une seule créance client oubliée de <strong>20 000 FCFA ce mois-ci</strong>, l'outil est rentabilisé pour 4 mois.</div>
+    </div>
+
+    <h3>Politique Boosters — "Si le client dit... Le commercial propose..."</h3>
+    <div class="mt-16">
+      <div class="booster-item"><div class="booster-trigger" onclick="toggleBooster(this)"><div class="booster-trigger-label">Client dit : <strong>"C'est trop cher pour mon budget."</strong></div><span class="booster-arrow">▶</span></div><div class="booster-content">💬 <strong>Réponse :</strong> "Passons au paiement annuel, vous économisez 2 mois de loyer SADA. Soit 2 mois à 0 FCFA tout en gardant tous les avantages du plan." → Proposer l'offre Sérénité (12 mois = 2 mois offerts + paramétrage stocks offert).</div></div>
+      <div class="booster-item"><div class="booster-trigger" onclick="toggleBooster(this)"><div class="booster-trigger-label">Client dit : <strong>"J'ai 5 boutiques, je ne peux pas payer 5 fois."</strong></div><span class="booster-arrow">▶</span></div><div class="booster-content">💬 <strong>Réponse :</strong> "Je vous accorde le tarif Volume (–15%) si nous signons pour les 5 sites aujourd'hui. Plus vous activez de sites, plus le coût unitaire baisse. Au-delà de 10 utilisateurs, je vous prépare un devis Grand Compte personnalisé."</div></div>
+      <div class="booster-item"><div class="booster-trigger" onclick="toggleBooster(this)"><div class="booster-trigger-label">Client dit : <strong>"Je veux tester plus de 15 jours."</strong></div><span class="booster-arrow">▶</span></div><div class="booster-content">💬 <strong>Réponse :</strong> "Je vous offre 15 jours de plus, mais nous programmons la formation de vos équipes dès demain. L'essai doit être actif, pas passif. Vous désignez un référent interne et on mesure les résultats ensemble à J+15."</div></div>
+      <div class="booster-item"><div class="booster-trigger" onclick="toggleBooster(this)"><div class="booster-trigger-label">Cabinet dit : <strong>"J'onboarde +10 clients ce trimestre."</strong></div><span class="booster-arrow">▶</span></div><div class="booster-content">💬 <strong>Offre Cabinet :</strong> Pack Cabinet Comptable — si le cabinet onboarde +10 clients, le module Premium est offert au cabinet pour son propre pilotage interne. Commissions récurrentes + certification SADA Partner.</div></div>
+      <div class="booster-item"><div class="booster-trigger" onclick="toggleBooster(this)"><div class="booster-trigger-label">Client actif dit : <strong>"J'ai un collègue intéressé."</strong></div><span class="booster-arrow">▶</span></div><div class="booster-content">💬 <strong>Offre Parrainage :</strong> 1 mois offert au parrain pour chaque nouveau client activé (payant). Le parrain reçoit son crédit automatiquement à J+30 après activation. Programme Referral activable depuis l'espace client.</div></div>
+    </div>
+
+    <div class="divider"></div>
+    <h3>Services d'Accompagnement (Optionnels)</h3>
+    <div class="card mt-16" style="background:var(--orange-pale);border:none"><div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap"><div style="font-size:32px">⚡</div><div><h4 style="margin-bottom:6px">Pack "Sprint Déploiement" — 25 000 FCFA (one shot)</h4><div class="text-sm text-gray" style="line-height:1.7">✓ Importation du catalogue produits/clients<br>✓ Formation de 2h pour l'équipe (présentiel ou visio)<br>✓ Configuration des comptes de paiement<br><em style="color:var(--orange)">Beaucoup de PME échouent par manque de données propres au départ. SADA Ops recommande de facturer l'onboarding pour garantir l'usage.</em></div></div></div></div>
+  </section>
+
+  <!-- ──────────── 4. PIPELINE ──────────── -->
+  <section id="pipeline" class="section">
+    <div class="section-title">Pipeline & Scripts de Combat</div>
+    <div class="section-subtitle">Du premier contact au closing — scripts prêts-à-dire et gestion des objections</div>
+    <h3>Workflow de Vente</h3>
+    <div class="pipeline-flow mt-16 mb-32"><div class="pipeline-step"><div class="step-circle">🌱</div><div class="step-label">Génération</div><div class="step-sub">Lead entrant</div></div><div class="pipeline-step"><div class="step-circle">🔍</div><div class="step-label">Qualification</div><div class="step-sub">BANT simplifié</div></div><div class="pipeline-step"><div class="step-circle">🗣️</div><div class="step-label">Découverte</div><div class="step-sub">Flux métier</div></div><div class="pipeline-step"><div class="step-circle">💻</div><div class="step-label">Démo</div><div class="step-sub">Cas d'usage client</div></div><div class="pipeline-step"><div class="step-circle">📄</div><div class="step-label">Proposition</div><div class="step-sub">Modulaire</div></div><div class="pipeline-step"><div class="step-circle">🤝</div><div class="step-label">Négociation</div><div class="step-sub">Valeur vs prix</div></div><div class="pipeline-step"><div class="step-circle" style="background:var(--orange);">🏆</div><div class="step-label" style="color:var(--orange)">Closing</div><div class="step-sub">Activation immédiate</div></div></div>
+
+    <h3>Scripts Prêts-à-Dire</h3>
+    <div class="mt-16 mb-24">
+      <div class="script-box"><span class="script-label">📞 Appel Initial</span><button class="copy-btn" onclick="copyScript(this, 'Bonjour [Nom], ici [Prénom] de SADA. Nous accompagnons les PME, commerçants et organisations dans la centralisation de leur caisse, comptabilité, paiements et pilotage financier au sein d\'une seule plateforme. Aujourd\'hui, beaucoup d\'entreprises utilisent plusieurs outils dispersés sans réelle visibilité temps réel. J\'aimerais comprendre comment vous gérez actuellement votre activité et voir si SADA peut vous faire gagner du temps et améliorer votre visibilité financière. Auriez-vous 5 minutes ?')">📋 Copier</button>« Bonjour [Nom], ici [Prénom] de SADA.<br><br>Nous accompagnons les PME, commerçants et organisations dans la centralisation<br>de leur caisse, comptabilité, paiements et pilotage financier au sein d'une seule plateforme.<br><br>Aujourd'hui, beaucoup d'entreprises utilisent plusieurs outils dispersés<br>sans réelle visibilité temps réel.<br><br>J'aimerais comprendre comment vous gérez actuellement votre activité<br>et voir si SADA peut vous faire gagner du temps et améliorer votre visibilité financière.<br><br><strong style="color:var(--orange)">Auriez-vous 5 minutes ?</strong> »</div>
+      <div class="script-box"><span class="script-label">🔍 Qualification</span><button class="copy-btn" onclick="copyScript(this, 'Comment gérez-vous aujourd\'hui vos ventes et votre caisse ? Utilisez-vous plusieurs outils pour votre gestion ? Comment suivez-vous votre trésorerie au quotidien ? Comment préparez-vous vos déclarations fiscales ? Disposez-vous d\'un reporting financier fiable ? Avez-vous des difficultés de suivi des paiements ou des dépenses ?')">📋 Copier</button>Questions clés — Règle : <strong style="color:var(--orange)">le prospect parle 70–80% du temps.</strong><br><br>— « Comment gérez-vous aujourd'hui vos ventes et votre caisse ? »<br>— « Utilisez-vous plusieurs outils pour votre gestion ? »<br>— « Comment suivez-vous votre trésorerie au quotidien ? »<br>— « Comment préparez-vous vos déclarations fiscales ? »<br>— « Disposez-vous d'un reporting financier fiable ? »<br>— « Avez-vous des difficultés de suivi des paiements ou des dépenses ? »</div>
+      <div class="script-box"><span class="script-label">💻 Démo — Points clés</span><button class="copy-btn" onclick="copyScript(this, 'Caisse & ventes : Chaque vente enregistrée dans la caisse alimente automatiquement vos données financières. | Facturation : Vos factures clients sont générées en quelques secondes et suivies en temps réel. | Comptabilité : Toutes les opérations sont automatiquement structurées. | Banque & paiements : Votre compte professionnel centralise les encaissements. | Tableaux de bord : Vous voyez instantanément votre trésorerie, dépenses et rentabilité. | IA décisionnelle : Puis-je payer ce fournisseur ce mois-ci ?')">📋 Copier</button><strong style="color:var(--orange-light)">Caisse :</strong> « Chaque vente alimente automatiquement vos données financières. »<br><strong style="color:var(--orange-light)">Facturation :</strong> « Vos factures sont générées en secondes et suivies en temps réel. »<br><strong style="color:var(--orange-light)">Comptabilité :</strong> « Toutes les opérations sont automatiquement structurées. »<br><strong style="color:var(--orange-light)">Banque :</strong> « Votre compte pro centralise tous les encaissements et paiements. »<br><strong style="color:var(--orange-light)">Dashboard :</strong> « Vous voyez instantanément trésorerie, dépenses et rentabilité. »<br><strong style="color:var(--orange-light)">IA :</strong> « <em>Puis-je payer ce fournisseur ce mois-ci ?</em> — SADA vous répond. »</div>
+      <div class="script-box"><span class="script-label">🏆 Closing</span><button class="copy-btn" onclick="copyScript(this, 'Souhaitez-vous commencer par la gestion commerciale et la caisse, puis activer la comptabilité ensuite ? Préférez-vous démarrer avec un accès dirigeant uniquement ou inclure directement votre comptable et vos équipes ? Souhaitez-vous également activer le compte de paiement professionnel pour centraliser vos flux ?')">📋 Copier</button>— « Souhaitez-vous commencer par la caisse, puis activer la comptabilité ensuite ? »<br>— « Préférez-vous démarrer avec un accès dirigeant uniquement ou inclure votre comptable ? »<br>— « Souhaitez-vous activer le compte de paiement professionnel pour centraliser vos flux ? »<br><br><em style="color:rgba(255,255,255,0.5)">Objectif : réduire la friction → accélérer l'activation → créer rapidement de la valeur visible.</em></div>
+    </div>
+
+    <h3>Gestion des 4 Objections Majeures</h3>
+    <div class="mt-16">
+      <div class="objection-item"><div class="objection-trigger" onclick="toggleObj(this)"><div class="obj-icon">💸</div><div class="objection-text">"C'est trop cher"</div><span style="margin-left:auto;color:var(--gray-300);font-size:14px;transition:transform 0.3s" class="obj-arr">▶</span></div><div class="objection-content"><div class="response-label">✅ Réponse Commerciale</div><div class="response-text">"Le vrai coût aujourd'hui est souvent le manque de visibilité : erreurs, pertes de temps, retards fiscaux ou décisions prises sans données fiables. SADA à 5 000 FCFA/mois, c'est 160 FCFA/jour — moins qu'un transport taxi pour aller chercher une facture manquante."</div></div></div>
+      <div class="objection-item"><div class="objection-trigger" onclick="toggleObj(this)"><div class="obj-icon">📊</div><div class="objection-text">"Nous avons déjà Excel"</div><span style="margin-left:auto;color:var(--gray-300);font-size:14px;transition:transform 0.3s" class="obj-arr">▶</span></div><div class="objection-content"><div class="response-label">✅ Réponse Commerciale</div><div class="response-text">"Excel reste un excellent outil, mais il ne connecte pas automatiquement vos ventes, paiements, comptabilité et reporting dans un système temps réel. Avec Excel, vous consolidez manuellement — avec SADA, c'est automatique et toujours à jour."</div></div></div>
+      <div class="objection-item"><div class="objection-trigger" onclick="toggleObj(this)"><div class="obj-icon">👨‍💼</div><div class="objection-text">"Mon comptable s'en occupe"</div><span style="margin-left:auto;color:var(--gray-300);font-size:14px;transition:transform 0.3s" class="obj-arr">▶</span></div><div class="objection-content"><div class="response-label">✅ Réponse Commerciale</div><div class="response-text">"SADA ne remplace pas votre comptable. Au contraire, il améliore la collaboration et fiabilise les données. Votre comptable gagnera du temps sur les saisies et pourra vous conseiller davantage sur la stratégie."</div></div></div>
+      <div class="objection-item"><div class="objection-trigger" onclick="toggleObj(this)"><div class="obj-icon">🤔</div><div class="objection-text">"C'est trop compliqué"</div><span style="margin-left:auto;color:var(--gray-300);font-size:14px;transition:transform 0.3s" class="obj-arr">▶</span></div><div class="objection-content"><div class="response-label">✅ Réponse Commerciale</div><div class="response-text">"SADA a été pensé pour les dirigeants non financiers. L'interface est simple, guidée et accompagnée par un agent IA qui vous explique, vous alerte et vous recommande des actions concrètes. Et en 15 jours d'essai, vous verrez par vous-même."</div></div></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 5. ENGINE OPS ──────────── -->
+  <section id="ops" class="section">
+    <div class="section-title">Engine Ops & Rituels</div>
+    <div class="section-subtitle">Le Cercle de Performance SADA : Écouter → Décider → Exécuter</div>
+    <div class="grid-2 mb-32" style="align-items:start"><div><h3 class="mb-16">Rituels d'Équipe</h3><div class="ritual-timeline"><div class="ritual-item"><div class="ritual-dot">1</div><div class="ritual-time">⏰ Quotidien — 9h00 (10 min)</div><div class="ritual-name">Stand-up "Quick-Win"</div><div class="ritual-items">📌 Qu'est-ce que j'ai signé hier ? (Célébration immédiate)<br>📌 Quel est mon "Gros Poisson" du jour ?<br>📌 Quel est le blocage terrain ?<br><em style="color:var(--orange);font-size:12px">Format : Debout ou groupe WhatsApp "Ops SADA". Manager résout les blocages avant midi.</em></div></div><div class="ritual-item"><div class="ritual-dot">2</div><div class="ritual-time">📅 Lundi — 1h</div><div class="ritual-name">Revue Pipeline "Le Nettoyage"</div><div class="ritual-items">📌 Taux de chute : pourquoi les PME bloquent après la démo ?<br>📌 Vitesse de closing : pourquoi pas de signature depuis 15 jours ?<br>📌 Roleplay 15 min : simuler un deal difficile de la semaine<br>📌 Checklist terrain : tablettes, connexion 4G, flyers</div></div><div class="ritual-item"><div class="ritual-dot">3</div><div class="ritual-time">📅 Dernier Vendredi du mois — 2h</div><div class="ritual-name">Revue Performance "La Boussole"</div><div class="ritual-items">📌 Analyse Secteur vs Conversion (réallocation ressources)<br>📌 Feedback Loop Produit : top 3 fonctionnalités demandées<br>📌 Cérémonie "Champion SADA" : prime meilleur volume + meilleur onboarding</div></div><div class="ritual-item"><div class="ritual-dot">4</div><div class="ritual-time">🎓 Mercredi (15 min) + Trimestriel</div><div class="ritual-name">SADA Training Hub</div><div class="ritual-items">📌 Flash Training : 1 astuce SADA/semaine (ex: "bilan en 2 clics")<br>📌 Immersion terrain : Head of Ops en RDV avec commercial<br>📌 Confronter le produit à la réalité du "marché Sandaga"</div></div></div></div><div><h3 class="mb-16">Tableau de Pilotage KPIs</h3><table class="kpi-table"><thead><tr><th>Rituel</th><th>KPI Clé</th><th>Seuil d'Alerte</th></tr></thead><tbody><tr><td><strong>Daily</strong></td><td>Démos effectuées</td><td><span class="kpi-badge kpi-red">🔴 &lt; 3/jour</span></td></tr><tr><td><strong>Daily</strong></td><td>Visites physiques (poignées de main)</td><td><span class="kpi-badge kpi-amber">🟡 &lt; 5/jour</span></td></tr><tr><td><strong>Hebdo</strong></td><td>Taux Démo → Test</td><td><span class="kpi-badge kpi-red">🔴 &lt; 40%</span></td></tr><tr><td><strong>Hebdo</strong></td><td>Activation terrain</td><td><span class="kpi-badge kpi-amber">🟡 &lt; 10/sem</span></td></tr><tr><td><strong>Mensuel</strong></td><td>Churn précoce (Abandon M+1)</td><td><span class="kpi-badge kpi-red">🔴 &gt; 10%</span></td></tr><tr><td><strong>Mensuel</strong></td><td>Cycle de signature</td><td><span class="kpi-badge kpi-amber">🟡 &gt; 14 jours</span></td></tr><tr><td><strong>Mensuel</strong></td><td>Taux de recommandation</td><td><span class="kpi-badge kpi-amber">🟡 &lt; 20% leads</span></td></tr><tr><td><strong>Trimestriel</strong></td><td>NPS (Satisfaction Client)</td><td><span class="kpi-badge kpi-red">🔴 &lt; 70</span></td></tr><tr><td><strong>Trimestriel</strong></td><td>Taux complétion profil onboarding</td><td><span class="kpi-badge kpi-red">🔴 &lt; 100%</span></td></tr></tbody></table><div class="highlight-box mt-24"><strong>⚠️ Churn Prédictif :</strong> Client actif n'ayant pas ouvert l'application depuis <strong>&gt; 72h</strong> = signal d'alerte immédiat. Déclencher une relance proactive.</div></div></div>
+
+    <h3>Framework "Ops Correction" — Si les indicateurs passent au rouge</h3>
+    <div class="framework-grid mt-16 mb-32"><div class="framework-card fw-leads"><div class="fw-title" style="color:var(--red)">📈 Leads élevés / Démos faibles</div><div class="fw-desc"><strong>Problème de Script.</strong> Les commerciaux vendent une "application" au lieu de vendre un "gain de temps / argent". Retravailler le pitch d'appel initial immédiatement.</div></div><div class="framework-card fw-demos"><div class="fw-title" style="color:var(--amber)">💻 Démos élevées / Signatures faibles</div><div class="fw-desc"><strong>Problème de Ciblage.</strong> On parle à l'utilisateur (comptable) mais pas au décideur (patron de PME). Requalifier les contacts et cibler le DG directement.</div></div><div class="framework-card fw-sign"><div class="fw-title" style="color:var(--green)">✍️ Signatures élevées / Utilisation faible</div><div class="fw-desc"><strong>Problème d'Onboarding.</strong> L'application est installée mais personne ne sait par où commencer. Activer le Pack Sprint Déploiement systématiquement.</div></div></div>
+
+    <h3>✅ Checklist de Validation de Vente</h3>
+    <div class="card mt-16"><ul class="checklist" id="sales-checklist"><li onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Le client a compris que l'essai de 15 jours est une <strong>phase de test actif</strong> (pas passif) ?</div></li><li onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Le <strong>mode de paiement</strong> (Mobile Money / Espèces / Virement) est clarifié ?</div></li><li onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Le client sait qu'il peut <strong>monter en gamme</strong> (ex: de Basique à Essentiel) en un clic ?</div></li><li onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">L'<strong>Option Annuelle</strong> a été présentée et son avantage (2 mois offerts) expliqué ?</div></li><li onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Un <strong>référent interne</strong> a été désigné chez le client pour le suivi post-activation ?</div></li><li onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Le <strong>Pack Sprint Déploiement</strong> (25 000 FCFA) a été proposé pour garantir l'usage ?</div></li><li onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">La date de la <strong>première saisie réelle</strong> dans SADA est planifiée ?</div></li><li onclick="toggleCheck(this)"><div class="check-box">✓</div><div class="check-text">Le <strong>programme de parrainage</strong> (1 mois offert) a été présenté au client ?</div></li></ul><div style="margin-top:16px;text-align:right"><button onclick="resetChecklist()" style="background:var(--gray-100);border:none;border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;color:var(--gray-500);font-family:'DM Sans',sans-serif">↺ Réinitialiser</button></div></div>
+  </section>
+
+  <!-- ──────────── 6. COMPARATEUR ──────────── -->
+  <section id="compare" class="section">
+    <div class="section-title">Comparateur Stratégique</div>
+    <div class="section-subtitle">SADA vs Odoo vs ERP classique vs Excel+Cabinet — L'avantage "Natif Afrique / Fintech"</div>
+    <div style="overflow-x:auto;margin-bottom:32px"><table class="compare-table"><thead><tr><th>Critère</th><th class="col-sada">🏆 SADA</th><th class="col-other">Odoo</th><th class="col-other">Sage / Oracle</th><th class="col-other">Excel + Cabinet</th></tr></thead><tbody><tr><td><strong>Modules</strong></td><td class="col-sada">ERP complet + IA + Compte Pro Fintech</td><td class="col-other">Très modulaire, config sur-mesure requise</td><td class="col-other">Modules séparés, coût élevé, sur-engineering</td><td class="col-other tick-no">Aucun — bricolage manuel</td></tr><tr><td><strong>OHADA / SYSCOHADA</strong></td><td class="col-sada"><span class="tick-yes">✓ NATIF</span> — fiches fiscales locales incluses</td><td class="col-other"><span class="tick-partial">⚠</span> Modules communautaires incomplets</td><td class="col-other"><span class="tick-partial">⚠</span> Adaptation via partenaires (très cher)</td><td class="col-other tick-no">✗ Non</td></tr><tr><td><strong>IA Intégrée</strong></td><td class="col-sada"><span class="tick-yes">✓</span> Anomalies, prévisions, recommandations, pilotage</td><td class="col-other"><span class="tick-partial">⚠</span> Plugins externes souvent payants</td><td class="col-other tick-no">✗ Peu ou pas — planification manuelle</td><td class="col-other tick-no">✗ Aucune</td></tr><tr><td><strong>Paiements Intégrés</strong></td><td class="col-sada"><span class="tick-yes">✓</span> Orange Money, Wave, virements, chèques — traçables</td><td class="col-other"><span class="tick-partial">⚠</span> Plugins non spécialisés Afrique</td><td class="col-other"><span class="tick-partial">⚠</span> Non natif, connecteurs avec frais</td><td class="col-other tick-no">✗ Manuel, déplacements physiques</td></tr><tr><td><strong>Cabinets Comptables</strong></td><td class="col-sada"><span class="tick-yes">✓</span> Conçu pour cabinets — collaboration intégrée</td><td class="col-other"><span class="tick-partial">⚠</span> Solutions externes souvent nécessaires</td><td class="col-other"><span class="tick-partial">⚠</span> Moins orienté cabinets</td><td class="col-other tick-no">Le cabinet crée lui-même les fichiers</td></tr><tr><td><strong>UX / Interface</strong></td><td class="col-sada"><span class="tick-yes">✓</span> Cloud, mobile-friendly, tablette, API</td><td class="col-other">Bonnes interfaces, multiplateformes</td><td class="col-other tick-no">Interfaces lourdes, desktop uniquement</td><td class="col-other tick-no">Cahier/Excel, zéro interopérabilité</td></tr><tr><td><strong>Tarification</strong></td><td class="col-sada">SaaS mensuel — 5 000 à 9 000 FCFA/user. PME accessible</td><td class="col-other">Open-source + services, coût variable</td><td class="col-other">Abonnement Enterprise (€€€)</td><td class="col-other"><span class="tick-yes">Gratuit</span> — mais coût humain élevé</td></tr></tbody></table></div>
+    <h3>Les 4 Avantages Décisifs "Natif Afrique"</h3>
+    <div class="grid-2 mt-16"><div class="card" style="border-left:4px solid var(--orange)"><div style="font-size:24px;margin-bottom:8px">🏦</div><h4 style="margin-bottom:6px">Compte Pro Fintech Natif</h4><div class="text-sm text-gray" style="line-height:1.6">Orange Money, Wave, virements — toutes les transactions africaines sont supportées nativement et automatiquement tracées dans la comptabilité.</div></div><div class="card" style="border-left:4px solid var(--orange)"><div style="font-size:24px;margin-bottom:8px">⚖️</div><h4 style="margin-bottom:6px">Conformité OHADA/SYSCOHADA</h4><div class="text-sm text-gray" style="line-height:1.6">Aucun module à ajouter. Aucun partenaire local requis. La conformité réglementaire est embarquée dans le produit depuis le premier jour.</div></div><div class="card" style="border-left:4px solid var(--orange)"><div style="font-size:24px;margin-bottom:8px">🤝</div><h4 style="margin-bottom:6px">Collaboration Cabinet-PME</h4><div class="text-sm text-gray" style="line-height:1.6">SADA est le seul outil conçu dès le départ pour la collaboration temps réel entre le cabinet comptable et ses clients PME en contexte africain.</div></div><div class="card" style="border-left:4px solid var(--orange)"><div style="font-size:24px;margin-bottom:8px">🤖</div><h4 style="margin-bottom:6px">IA Décisionnelle Intégrée</h4><div class="text-sm text-gray" style="line-height:1.6">Un agent IA qui répond à "Puis-je payer ce fournisseur ce mois-ci ?" — fonctionnalité impossible avec Excel ou les ERP classiques sans coûts additionnels importants.</div></div></div>
+    <div class="card-orange card mt-24" style="text-align:center;padding:32px"><div style="font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:10px">Le terrain africain n'est plus une périphérie</div><div style="font-size:14px;opacity:0.9;line-height:1.7;max-width:600px;margin:0 auto">C'est le <strong>laboratoire mondial de l'agilité financière</strong>. SADA est l'unique solution née pour ce terrain, avec ses contraintes, ses opportunités et ses ambitions.</div></div>
+  </section>
+</main>
+
+<div id="toast">✓ Script copié dans le presse-papiers !</div>
+<script>
+function showSection(id) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById(id).classList.add('active'); const titles = { dashboard:'Dashboard Vision', personas:'Hub Personas & Argumentaires', pricing:'Centre de Calcul & Tarifs', pipeline:'Pipeline & Scripts de Combat', ops:'Engine Ops & Rituels', compare:'Comparateur Stratégique' }; document.getElementById('page-title').textContent = titles[id] || id; document.querySelectorAll('.nav-item').forEach(b => { if(b.getAttribute('onclick') && b.getAttribute('onclick').includes(id)) b.classList.add('active'); }); }
+function toggleSidebar() { const sb = document.getElementById('sidebar'); const body = document.body; sb.classList.toggle('collapsed'); body.classList.toggle('sidebar-collapsed'); document.getElementById('collapse-btn').innerHTML = sb.classList.contains('collapsed') ? '→' : '←'; }
+function togglePersona(card) { card.classList.toggle('open'); }
+function filterCheat(cat, btn) { document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.querySelectorAll('#cheat-body tr').forEach(tr => { if(cat === 'all' || tr.dataset.cat === cat) { tr.removeAttribute('data-hide'); tr.style.display = ''; } else { tr.style.display = 'none'; } }); }
+function toggleBooster(trigger) { trigger.closest('.booster-item').classList.toggle('open'); }
+function calcROI() { const users = parseInt(document.getElementById('roi-users').value); const plan = parseInt(document.getElementById('roi-plan').value); const creances = parseInt(document.getElementById('roi-creances').value); const hours = parseInt(document.getElementById('roi-hours').value); const cost = users * plan; const timeValue = hours * 4 * 2000; const value = creances + timeValue; const net = value - cost; document.getElementById('roi-users-val').textContent = users; document.getElementById('roi-creances-val').textContent = creances.toLocaleString('fr-FR'); document.getElementById('roi-hours-val').textContent = hours; document.getElementById('roi-cost').textContent = cost.toLocaleString('fr-FR'); document.getElementById('roi-value').textContent = value.toLocaleString('fr-FR'); const netEl = document.getElementById('roi-net'); netEl.textContent = (net >= 0 ? '+' : '') + net.toLocaleString('fr-FR'); netEl.style.color = net >= 0 ? 'white' : '#FCA5A5'; } calcROI();
+function toggleObj(trigger) { const item = trigger.closest('.objection-item'); item.classList.toggle('open'); const arrow = trigger.querySelector('.obj-arr'); if(arrow) arrow.style.transform = item.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0deg)'; }
+function toggleCheck(li) { li.classList.toggle('checked'); }
+function resetChecklist() { document.querySelectorAll('#sales-checklist li').forEach(li => li.classList.remove('checked')); }
+function copyScript(btn, text) { navigator.clipboard.writeText(text).then(() => { btn.textContent = '✓ Copié !'; btn.classList.add('copied'); showToast(); setTimeout(() => { btn.textContent = '📋 Copier'; btn.classList.remove('copied'); }, 2000); }).catch(() => { btn.textContent = '✓ OK'; setTimeout(() => { btn.textContent = '📋 Copier'; }, 1500); }); }
+function showToast() { const t = document.getElementById('toast'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+</script>
+</body>
+</html>
